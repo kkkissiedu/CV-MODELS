@@ -1,0 +1,14 @@
+/.vscode
+/Classic UNet/data
+/Classic UNet/data_640
+/Classic UNet/FULL DATASET FILES
+/Classic UNet/saved_models
+/Classic UNet/visualisations
+/Classic UNet/__pycache__   
+/Classic UNet/prepare_concrete_dataset.py
+/Classic UNet/train.py
+/Classic UNet/dataset.py
+/Classic UNet/evaluate.py
+/Classic UNet/loss.py
+/Classic UNet/visualise.py
+/Classic UNet/weights_cache.pt
