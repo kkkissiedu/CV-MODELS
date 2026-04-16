@@ -99,9 +99,10 @@ class AttentionUNet(nn.Module):
     def _make_decoders(self, in_channels:int):
 
         for feature in reversed(self.feature_list):
-            self.upconvs.append(nn.ConvTranspose2d(in_channels = in_channels, out_))
+            self.upconvs.append(nn.ConvTranspose2d(in_channels = self.bottleneck_size, out_channels = feature, kernel_size = 3))
             self.decoders.append(ConvBlock(in_channels = in_channels, out_channels = feature))
 
             self.att_gates.append(AttentionGate(x_channels = feature, g_channels = feature * 2, inter_channels = feature // 2))
 
+            in_channels = feature
 
