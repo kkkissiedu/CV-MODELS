@@ -28,7 +28,7 @@ from model import AttentionUNet
 
 
 # %% Config
-DATASET_DIR     = "data_concrete_640"
+DATASET_DIR     = "data_640"
 PRE_RESIZED     = True
 SAVE_DIR        = "saved_models"
 WEIGHTS_CACHE   = "weights_cache.pt"

@@ -18,8 +18,8 @@ class ConvBlock(nn.Module):
             nn.ReLU(inplace = True)
         )
 
-        def forward(self, x:torch.Tensor) -> torch.Tensor:
-            return self.conv(x)
+    def forward(self, x:torch.Tensor) -> torch.Tensor:
+        return self.conv(x)
 # %% Attention Gate definition
 class AttentionGate(nn.Module):
     def __init__(self, x_channels:int, g_channels:int, inter_channels:int):
