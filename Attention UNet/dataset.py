@@ -11,7 +11,6 @@ from torchvision import transforms
 
 # %% Transform helpers
 # Named functions at module level — required for pickling with num_workers > 0
-# on Windows. Never use lambdas inside transforms when using multiple workers.
 
 def mask_to_binary(x: torch.Tensor) -> torch.Tensor:
     """Snap all float mask values to exactly 0.0 or 1.0 after ToTensor."""
