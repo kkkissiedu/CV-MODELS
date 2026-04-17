@@ -12,3 +12,17 @@
 /Classic UNet/loss.py
 /Classic UNet/visualise.py
 /Classic UNet/weights_cache.pt
+
+/Attention UNet/data
+/Attention UNet/data_640
+/Attention UNet/FULL DATASET FILES
+/Attention UNet/saved_models
+/Attention UNet/visualisations
+/Attention UNet/__pycache__
+/Attention UNet/prepare_concrete_dataset.py
+/Attention UNet/train.py
+/Attention UNet/dataset.py
+/Attention UNet/evaluate.py
+/Attention UNet/loss.py
+/Attention UNet/visualise.py
+/Attention UNet/weights_cache.pt
