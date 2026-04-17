@@ -75,7 +75,7 @@ class AttentionGate(nn.Module):
         return alpha * x
 # %% Attention UNet definition
 class AttentionUNet(nn.Module):
-    def __init__(self, in_channels:int = 3, num_classes:int = 1, feature_list = [64, 128, 256, 512], bottleneck_size:int = 1024):
+    def __init__(self, in_channels:int = 3, num_classes:int = 1, feature_list = [32, 64, 128, 256, 512], bottleneck_size:int = 1024):
         super(AttentionUNet, self).__init__()
 
         self.feature_list = feature_list
