@@ -17,6 +17,9 @@ class ConvBlock(nn.Module):
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace = True)
         )
+
+        def forward(self, x:torch.Tensor) -> torch.Tensor:
+            return self.conv(x)
 # %% Attention Gate definition
 class AttentionGate(nn.Module):
     def __init__(self, x_channels:int, g_channels:int, inter_channels:int):
@@ -81,28 +84,78 @@ class AttentionUNet(nn.Module):
 
         self.pool = nn.MaxPool2d(kernel_size = 2, stride = 2)
         self.bottleneck = ConvBlock(in_channels = feature_list[-1], out_channels = self.bottleneck_size)
+        self.classifier = nn.Conv2d(in_channels = feature_list[0], out_channels = num_classes, kernel_size = 1)
 
         self.encoders = nn.ModuleList()
         self.decoders = nn.ModuleList()
         self.upconvs = nn.ModuleList()
         self.att_gates = nn.ModuleList()
 
+        self._make_encoders(in_channels)
+        self._make_decoders(self.bottleneck_size)
+
 
 
     def _make_encoders(self, in_channels:int):
         for feature in self.feature_list:
-            self.encoders.append(ConvBlock(in_channels = in_channels, out_channels = feature))
+            self.encoders.append(
+                ConvBlock(in_channels = in_channels, out_channels = feature)
+                )
             self.encoders.append(self.pool)
 
             in_channels = feature
 
-    def _make_decoders(self, in_channels:int):
+    def _make_decoders(self, in_channels: int):
+        ch = in_channels  # starts at bottleneck_size, then tracks previous decoder output
 
         for feature in reversed(self.feature_list):
-            self.upconvs.append(nn.ConvTranspose2d(in_channels = self.bottleneck_size, out_channels = feature, kernel_size = 3))
-            self.decoders.append(ConvBlock(in_channels = in_channels, out_channels = feature))
+            self.upconvs.append(
+                nn.ConvTranspose2d(in_channels=ch, out_channels=feature,
+                                kernel_size=2, stride=2)
+            )
 
-            self.att_gates.append(AttentionGate(x_channels = feature, g_channels = feature * 2, inter_channels = feature // 2))
+            self.att_gates.append(
+                AttentionGate(x_channels=feature, g_channels=feature,
+                            inter_channels=max(feature // 2, 1))
+            )
 
-            in_channels = feature
+            self.decoders.append(ConvBlock(in_channels=feature * 2, out_channels=feature))
+            ch = feature
 
+    
+    def forward(self, x:torch.Tensor) -> torch.Tensor:
+        skips = []
+
+        # Encoder
+        for i in range(0, len(self.encoders), 2):
+            x = self.encoders[i](x)
+            skips.append(x)
+
+            x = self.encoders[i + 1](x)
+
+        # Bottleneck
+        x = self.bottleneck(x)
+
+        # Decoder
+        skips = skips[::-1]
+
+        for i, (up, att, dec) in enumerate(
+                zip(self.upconvs, self.att_gates, self.decoders)):
+            
+            # Upsample
+            x = up(x)
+
+            skip = skips[i]
+
+            if x.shape != skip.shape:
+                x = F.interpolate(x, size=skip.shape[2:])
+
+            # Attention Gate
+            skip = att(skip, x)
+
+            x = torch.cat((skip, x), dim = 1)
+
+            # Decode
+            x = dec(x)
+
+        return self.classifier(x)
