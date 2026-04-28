@@ -28,7 +28,7 @@ from model import AttentionUNet
 
 
 # %% Config
-DATASET_DIR     = "data_640"
+DATASET_DIR     = "data_640_512"
 PRE_RESIZED     = True
 SAVE_DIR        = "saved_models"
 WEIGHTS_CACHE   = "weights_cache.pt"
@@ -38,8 +38,8 @@ NUM_EPOCHS      = 100
 IN_CHANNELS     = 3
 FEATURE_LIST    = [64, 128, 256, 512]
 BOTTLENECK_SIZE = 1024
-IMAGE_SIZE      = 640
-BATCH_SIZE      = 6
+IMAGE_SIZE      = 480
+BATCH_SIZE      = 4
 NUM_WORKERS     = 4
 
 
@@ -51,7 +51,12 @@ def train(config: dict) -> torch.nn.Module:
     print(f"Device: {device}")
     if device.type == "cuda":
         print(f"GPU:    {torch.cuda.get_device_name(0)}")
-        torch.backends.cudnn.benchmark = True
+        # FIX: benchmark=False eliminates cuDNN's per-session algorithm search.
+        # benchmark=True is faster per-batch but causes a ~10min hang on first
+        # run of any new architecture. With our pre-sized dataset the default
+        # algorithm is fast enough — no measurable difference in epoch time.
+        torch.backends.cudnn.benchmark     = False
+        torch.backends.cudnn.deterministic = True
 
     os.makedirs(config["save_dir"], exist_ok=True)
 
@@ -90,8 +95,6 @@ def train(config: dict) -> torch.nn.Module:
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=config["num_epochs"], eta_min=1e-6
     )
-
-    # AMP — uses Tensor Cores on RTX GPUs
     scaler = GradScaler("cuda")
 
     # ── Metrics ───────────────────────────────────────────────────────────────
@@ -234,10 +237,12 @@ def train(config: dict) -> torch.nn.Module:
             best_val_iou     = epoch_val_iou
             best_epoch       = epochs_done
             best_model_state = copy.deepcopy(model.state_dict())
-            save_path        = os.path.join(config["save_dir"], "best_attention_unet.pth")
+            save_path        = os.path.join(config["save_dir"],
+                                            "best_attention_unet.pth")
             torch.save(best_model_state, save_path)
             print(f"    ^ New best model  "
-                  f"(epoch {best_epoch}, val iou {best_val_iou:.4f})  -> {save_path}")
+                  f"(epoch {best_epoch}, val iou {best_val_iou:.4f})"
+                  f"  -> {save_path}")
 
     # ── End of training ───────────────────────────────────────────────────────
     total_time = time.time() - training_start

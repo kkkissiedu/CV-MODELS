@@ -26,3 +26,4 @@
 /Attention UNet/loss.py
 /Attention UNet/visualise.py
 /Attention UNet/weights_cache.pt
+/Attention UNet/data_640_512

@@ -251,4 +251,4 @@ def preprocess_dataset(dataset_dir: str, image_size: int):
 
 
 if __name__ == "__main__":
-    preprocess_dataset("data_concrete", image_size=640)
+    preprocess_dataset("data_640", image_size=512)
